@@ -7,14 +7,18 @@ import random
 
 pygame.init()
 
+# -----Options-----
 WINDOW_SIZE = (1200, 800)
-NUM_RAYS = 100 # Must be between 1 and 360
+NUM_RAYS = 150 # Must be between 1 and 360
+SOLID_RAYS = False # Can be somewhat glitchy. For best results, set NUM_RAYS to 360
 NUM_WALLS = 5 
+#------------------
 
 screen = pygame.display.set_mode(WINDOW_SIZE)
 display = pygame.Surface(WINDOW_SIZE)
 
 mx, my = pygame.mouse.get_pos()
+lastClosestPoint = (0, 0)
 running = True
 rays = []
 walls = []
@@ -69,9 +73,10 @@ for i in range(0, 360, int(360/NUM_RAYS)):
     rays.append(Ray(mx, my, math.radians(i)))
 
 def drawRays(rays, walls, color = 'white'):
+    global lastClosestPoint
     for ray in rays:
         closest = 100000
-        closestpoint = None
+        closestPoint = None
         for wall in walls:
             intersectPoint = ray.checkCollision(wall)
             if intersectPoint is not None:
@@ -82,10 +87,13 @@ def drawRays(rays, walls, color = 'white'):
                 # If the intersect point is closer than the previous closest intersect point, it becomes the closest intersect point
                 if (distance < closest):
                     closest = distance
-                    closestpoint = intersectPoint
+                    closestPoint = intersectPoint
 
-        if closestpoint is not None:
-            pygame.draw.line(display, color, (ray.x, ray.y), closestpoint)
+        if closestPoint is not None:
+            pygame.draw.line(display, color, (ray.x, ray.y), closestPoint)
+            if SOLID_RAYS:
+                pygame.draw.polygon(display, color, [(mx, my), closestPoint, lastClosestPoint])
+                lastClosestPoint = closestPoint
 
 def generateWalls():
     walls.clear()

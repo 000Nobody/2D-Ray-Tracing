@@ -10,4 +10,5 @@
 * Clone GitHub repository
 * Download required dependencies: `$ pip install -r requirements.txt`
 * `$ python main.py`
+* Feel free to edit the options at the top of the script
 * Move the ray source with the mouse, randomize the walls with the space key

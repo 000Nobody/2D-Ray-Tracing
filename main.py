@@ -8,10 +8,10 @@ import random
 pygame.init()
 
 # -----Options-----
-WINDOW_SIZE = (1200, 800)
+WINDOW_SIZE = (1200, 800) # Width x Height in pixels
 NUM_RAYS = 150 # Must be between 1 and 360
 SOLID_RAYS = False # Can be somewhat glitchy. For best results, set NUM_RAYS to 360
-NUM_WALLS = 5 
+NUM_WALLS = 5 # The amount of randomly generated walls
 #------------------
 
 screen = pygame.display.set_mode(WINDOW_SIZE)
@@ -22,12 +22,13 @@ lastClosestPoint = (0, 0)
 running = True
 rays = []
 walls = []
+particles = []
 
 class Ray:
-    def __init__(self, x, y, radius):
+    def __init__(self, x, y, angle):
         self.x = x
         self.y = y
-        self.dir = (math.cos(radius), math.sin(radius))
+        self.dir = (math.cos(angle), math.sin(angle))
 
     def update(self, mx, my):
         self.x = mx
@@ -43,7 +44,7 @@ class Ray:
         y3 = self.y
         x4 = self.x + self.dir[0]
         y4 = self.y + self.dir[1]
-
+    
         # Using line-line intersection formula to get intersection point of ray and wall
         # Where (x1, y1), (x2, y2) are the ray pos and (x3, y3), (x4, y4) are the wall pos
         denominator = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)
@@ -65,6 +66,13 @@ class Wall:
         self.start_pos = start_pos
         self.end_pos = end_pos
         self.color = color
+        self.slope_x = end_pos[0] - start_pos[0]
+        self.slope_y = end_pos[1] - start_pos[1]
+        if self.slope_x == 0:
+            self.slope = 0
+        else:
+            self.slope = self.slope_y / self.slope_x
+        self.length = math.sqrt(self.slope_x**2 + self.slope_y**2)
 
     def draw(self):
         pygame.draw.line(display, self.color, self.start_pos, self.end_pos, 3)
@@ -81,10 +89,10 @@ def drawRays(rays, walls, color = 'white'):
             intersectPoint = ray.checkCollision(wall)
             if intersectPoint is not None:
                 # Get distance between ray source and intersect point
-                dx = ray.x - intersectPoint[0]
-                dy = ray.y - intersectPoint[1]
-                distance = math.sqrt(dx**2 + dy**2)
+                ray_dx = ray.x - intersectPoint[0]
+                ray_dy = ray.y - intersectPoint[1]
                 # If the intersect point is closer than the previous closest intersect point, it becomes the closest intersect point
+                distance = math.sqrt(ray_dx**2 + ray_dy**2)
                 if (distance < closest):
                     closest = distance
                     closestPoint = intersectPoint
@@ -116,6 +124,9 @@ def draw():
     for wall in walls:
         wall.draw()
 
+    for particle in particles:
+        particle.draw()
+
     drawRays([ray for ray in rays], [wall for wall in walls])
 
     screen.blit(display, (0, 0))
@@ -131,14 +142,12 @@ while running:
             pygame.quit()
 
         if event.type == KEYDOWN:
+            # Re-randomize walls on Space
             if event.key == pygame.K_SPACE:
-               generateWalls() 
+               generateWalls()
 
     for ray in rays:
         ray.update(mx, my)
-
-    for wall in walls:
-        wall.draw()
 
     draw()
 
